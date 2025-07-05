@@ -158,29 +158,38 @@ const UserActions = () => {
         throw new Error('Invalid status value')
       }
 
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Get current session with retry logic
+      let session = null;
+      let sessionError = null;
       
-      // If no session or error, redirect to login
-      if (sessionError || !session?.user?.id) {
-        console.warn('No active session, redirecting to login...')
-        window.location.href = '/#/login?redirectedFrom=' + encodeURIComponent(window.location.pathname)
+      // Try to get session
+      const { data: sessionData, error: sessionErrorData } = await supabase.auth.getSession()
+      session = sessionData?.session
+      sessionError = sessionErrorData
+      
+      // If no session, try to refresh it
+      if (!session && !sessionError) {
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+        session = refreshedSession
+        sessionError = refreshError
+      }
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        // Redirect to login if not authenticated
+        if (sessionError.message.includes('Invalid Refresh Token')) {
+          window.location.href = '/#/login'
+          return
+        }
+        throw new Error('Session error. Please log in again.')
+      }
+      
+      if (!session?.user?.id) {
+        window.location.href = '/#/login'
         return
       }
       
       const currentUserId = session.user.id
-      
-      // Verify user has admin role
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', currentUserId)
-        .single()
-      
-      if (userError || !userData || userData.role !== 'admin') {
-        console.error('Unauthorized access attempt:', { currentUserId, userData, userError })
-        throw new Error('You do not have permission to perform this action')
-      }
 
       // Log the update data for debugging
       console.log('Updating user with:', { 

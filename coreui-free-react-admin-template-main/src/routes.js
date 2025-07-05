@@ -4,7 +4,7 @@ const Dashboard = React.lazy(() => import('./dashboard/Dashboard'))
 const Users = React.lazy(() => import('./views/users/Users'))
 const UserProfile = React.lazy(() => import('./views/users/UserProfile'))
 const UserActions = React.lazy(() => import('./views/users/UserActions'))
-const Coins = React.lazy(() => import('./views/Packages/Packages'))
+const Packages = React.lazy(() => import('./views/Packages/Packages'))
 const Notifications = React.lazy(() => import('./views/notifications-page'))
 const NotificationHistory = React.lazy(() => import('./views/notification-history'))
 const Competitions = React.lazy(() => import('./views/competitions'))
@@ -64,7 +64,7 @@ const routes = [
   { path: '/users', name: 'Users', element: Users },
   { path: '/users/:id', name: 'User Profile', element: UserProfile },
   { path: '/users/:id/actions', name: 'User Actions', element: UserActions },
-  { path: '/coins', name: 'Coins', element: Coins },
+  { path: '/packages', name: 'Packages', element: Packages },
   { path: '/notifications', name: 'Notifications', element: Notifications, exact: true },
   { path: '/notifications/history', name: 'Notification History', element: NotificationHistory },
   { path: '/competitions', name: 'Competitions', element: Competitions },

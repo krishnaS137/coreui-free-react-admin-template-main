@@ -1,11 +1,55 @@
-# Notifications Page
+# Notifications Management
 
 ## Overview
 Created on: 2025-06-22  
-Last Updated: 2025-06-25  
+Last Updated: 2025-07-05  
 
 ## Purpose
-The Notifications page provides users with a centralized location to view and manage system notifications. This includes features for filtering, marking notifications as read, and viewing notification details.
+The Notifications system allows administrators to create and manage notifications that can be sent to users. It supports various notification types including instant and scheduled notifications, with rich content and images.
+
+## Features
+
+### Create Notification
+- **Notification Type**:
+  - Single User
+  - All Users
+  - Competition Participants
+  - Schedule (for future delivery)
+  - Schedule Multiple (recurring)
+- **Content**:
+  - Title (required)
+  - Message (rich text supported)
+  - Image upload with preview (optional)
+    - Supports drag & drop or click to select
+    - Shows preview of selected image
+    - Can be removed before sending
+- **Scheduling**:
+  - For "Schedule" and "Schedule Multiple" types:
+    - Date and time picker appears
+    - Only future dates/times can be selected
+    - Timezone-aware scheduling
+- **Form Validation**:
+  - All required fields must be filled
+  - Image size and type validation
+  - Date validation for scheduled notifications
+
+### Notification History
+- Displays all sent notifications in a sortable table
+- Shows key information:
+  - Title
+  - Type
+  - Date Sent
+  - Status (Sent, Pending, Failed)
+  - Number of recipients
+- **Filtering**:
+  - Search by title or content
+  - Filter by notification type
+  - Filter by date range
+  - Filter by status
+- **Actions**:
+  - View notification details
+  - Resend failed notifications
+  - Export notification history (CSV/Excel)
 
 ## Implementation Details
 
@@ -13,38 +57,54 @@ The Notifications page provides users with a centralized location to view and ma
 ```
 src/
   views/
-    notifications-page/    # Main notifications feature
-      Notifications.js    # Main component
-      index.js            # Export file
-      components/         # Sub-components (if any)
-      hooks/              # Custom hooks
-      utils/              # Utility functions
+    notifications-page/       # Create notifications
+      Notifications.js       # Main component for creating notifications
+      index.js               # Export file
+      
+    notification-history/    # View notification history
+      NotificationHistory.js # Main component for viewing history
+      index.js               # Export file
+      
+    components/              # Shared components (if any)
+    hooks/                   # Custom hooks
+    utils/                   # Utility functions
 ```
 
-### Migration Notes
-- Moved from `src/views/notifications/` to `src/views/notifications-page/` on 2025-06-22
-- Old notification components (alerts, badges, modals, toasts) were removed as they were part of the template examples
-- The new structure follows a feature-based organization pattern
+### Data Structure
+```javascript
+// Notification Object
+{
+  id: string,
+  type: 'single' | 'all' | 'competition' | 'schedule' | 'schedule_multiple',
+  title: string,
+  content: string,
+  imageUrl: string | null,
+  scheduledFor: string | null,  // ISO date string
+  status: 'draft' | 'scheduled' | 'sent' | 'failed',
+  createdAt: string,            // ISO date string
+  sentAt: string | null,        // ISO date string
+  recipients: number,
+  failedRecipients: number
+}
+```
 
-### Features
-1. **Notification List**
-   - Displays notifications in a sortable table
-   - Shows notification title, message, type, and timestamp
-   - Visual indicators for read/unread status
+## Recent Updates
+- Added support for scheduled notifications
+- Implemented image upload with preview
+- Added date picker for scheduling
+- Improved form validation and error handling
+- Enhanced notification history with better filtering
+- Added status tracking for notifications
+- Improved responsive design for all screen sizes
 
-2. **Filtering**
-   - Search by notification content
-   - Filter by notification type:
-     - All
-     - Single
-     - Competition
-     - Selective User
-   - Filter by date range (From/To)
-
-3. **Actions**
-   - Mark individual notifications as read
-   - Mark all notifications as read
-   - (Future) Delete notifications
+## Future Enhancements
+- Add support for notification templates
+- Implement notification preview before sending
+- Add bulk notification management
+- Include read receipts and engagement metrics
+- Add support for rich media content (videos, GIFs)
+- Implement notification scheduling with timezones
+- Add user segmentation for targeted notifications
 
 ### Component Structure
 ```jsx

@@ -24,7 +24,8 @@ const Notifications = () => {
     user: '',
     title: '',
     content: '',
-    image: null
+    image: null,
+    scheduleDate: ''
   })
   
   const [dragActive, setDragActive] = useState(false)
@@ -135,6 +136,28 @@ const Notifications = () => {
                     />
                   </CCol>
                   
+                  {(formData.notificationType === 'schedule' || formData.notificationType === 'schedule-multiple') && (
+                    <CCol xs={12}>
+                      <CFormLabel htmlFor="scheduleDate">
+                        {formData.notificationType === 'schedule' ? 'Schedule Date & Time' : 'Start Date & Time'}
+                      </CFormLabel>
+                      <CFormInput
+                        type="datetime-local"
+                        id="scheduleDate"
+                        name="scheduleDate"
+                        value={formData.scheduleDate}
+                        onChange={handleInputChange}
+                        min={new Date().toISOString().slice(0, 16)}
+                        required
+                      />
+                      {formData.notificationType === 'schedule-multiple' && (
+                        <small className="text-muted">
+                          For multiple schedules, you'll be able to set additional dates after this one.
+                        </small>
+                      )}
+                    </CCol>
+                  )}
+                  
                   <CCol xs={12}>
                     <CFormLabel htmlFor="content">Notification Content</CFormLabel>
                     <CFormTextarea
@@ -198,6 +221,8 @@ const Notifications = () => {
                       )}
                     </div>
                   </CCol>
+                  
+
                 </CRow>
               </div>
               

@@ -44,9 +44,9 @@ const NotificationHistory = () => {
 
   // Mock data for the table
   const notifications = [
-    { id: 1, title: 'System Update', type: 'all', date: '2025-06-20', status: 'sent' },
-    { id: 2, title: 'Feedback Received', type: 'feedback', date: '2025-06-19', status: 'read' },
-    { id: 3, title: 'New Feature', type: 'all', date: '2025-06-18', status: 'sent' },
+    { id: 1, title: 'System Update', type: 'all', date: '2025-06-20' },
+    { id: 2, title: 'Feedback Received', type: 'feedback', date: '2025-06-19' },
+    { id: 3, title: 'New Feature', type: 'all', date: '2025-06-18' },
   ];
 
   return (
@@ -120,7 +120,6 @@ const NotificationHistory = () => {
                   <CTableHeaderCell>Title</CTableHeaderCell>
                   <CTableHeaderCell>Type</CTableHeaderCell>
                   <CTableHeaderCell>Date</CTableHeaderCell>
-                  <CTableHeaderCell>Status</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -132,11 +131,6 @@ const NotificationHistory = () => {
                       {notification.type === 'feedback' ? 'Feedback Reply' : 'All'}
                     </CTableDataCell>
                     <CTableDataCell>{notification.date}</CTableDataCell>
-                    <CTableDataCell>
-                      <CBadge color={notification.status === 'sent' ? 'info' : 'success'}>
-                        {notification.status}
-                      </CBadge>
-                    </CTableDataCell>
                   </CTableRow>
                 ))}
               </CTableBody>

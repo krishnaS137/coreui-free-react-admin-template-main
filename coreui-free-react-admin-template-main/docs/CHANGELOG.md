@@ -6,13 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Renamed 'Coins' to 'Packages' in the navigation menu
+- Updated route from '/coins' to '/packages' for better semantics
+- Completely redesigned Packages page with new coin calculation system:
+  - Implemented 1 INR = 10 coins conversion rate
+  - Replaced discount system with bonus coins percentage
+  - Added real-time coin calculation based on price
+  - Improved UI to show base coins and bonus coins clearly
+  - Updated form validation and error messages
+  - Changed Active status from switch to checkbox for better UX
+  
+### Notification System Updates
+- **Notification Creation**:
+  - Added date and time picker for scheduled notifications
+  - Improved form layout for better user experience
+  - Added validation for scheduled dates (must be in the future)
+- **Notification History**:
+  - Removed status column from the notifications table
+  - Simplified the table view for better readability
+  - Updated mock data to match the new structure
+
+### Competitions Page Updates
+- **Create Competition Form**:
+  - Added max participants field (optional number input)
+  - Added competition description (rich text area)
+  - Added disqualification criteria field
+  - Added image upload functionality with preview
+  - Improved form layout and spacing
+  - Added form validation and user feedback
+  - Added registration start date field with date-time picker
+  - Implemented date validation to ensure: Current time < registration start date < live date < end date
+  - Added visual feedback for date validation errors
+  - Disabled date pickers until previous date is selected
+  - Added minimum date constraints to prevent selecting invalid dates
+  - Improved form layout with responsive grid for date fields
+  - Added clear error messages for date validation failures
+- **View Competitions**:
+  - Updated status options to: Draft, Registration Open, Live, Completed, Cancelled
+  - Added color-coded status badges for better visibility
+  - Updated status filtering to match new status options
+  - Enhanced mock data with new status values
+- **Documentation**:
+  - Updated CHANGELOG.md to reflect all competition-related changes
+  - Added documentation for new form fields and their validation rules
+  - Documented new status options and their meanings
+  - Documented date validation changes in the Competitions form
+
 ### Added
-- **Admin Authentication System**
-  - Dedicated `admins` table for admin accounts
-  - Secure login and registration flow
-  - Session management with localStorage
-  - Protected routes and authentication checks
-  - Comprehensive documentation in `docs/admin-authentication.md`
 - User Status Management system with four status types: normal, warned, suspended_7days, suspended_indefinite
 - Automatic expiration for 7-day suspensions
 - Database schema for user status tracking and action history
