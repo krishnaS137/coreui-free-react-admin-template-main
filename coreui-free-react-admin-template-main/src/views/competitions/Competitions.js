@@ -10,30 +10,136 @@ import {
   CFormInput,
   CFormLabel,
   CButton,
+  CFormTextarea,
+  CFormText,
+  CInputGroup,
+  CInputGroupText,
+  CImage
 } from '@coreui/react';
+import { cilCloudUpload } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 
 const Competitions = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     competitionName: '',
+    registrationStartDate: '',
     liveOn: '',
     endOn: '',
     competitionType: '',
     competitionCriteria: '',
+    maxParticipants: '',
+    description: '',
+    disqualificationCriteria: '',
     entryFee: '',
     rules: '',
     position1Prize: '',
     position2Prize: '',
-    position3Prize: ''
+    position3Prize: '',
+    image: null
   });
+  
+  const [dateErrors, setDateErrors] = useState({
+    registrationStartDate: '',
+    liveOn: '',
+    endOn: ''
+  });
+  
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  const validateDates = (name, value) => {
+    const errors = { ...dateErrors };
+    const currentDate = new Date();
+    
+    if (name === 'registrationStartDate') {
+      const registrationDate = new Date(value);
+      if (registrationDate < currentDate) {
+        errors.registrationStartDate = 'Registration start date must be in the future';
+      } else {
+        errors.registrationStartDate = '';
+      }
+      
+      // If live date is already set, re-validate it
+      if (formData.liveOn) {
+        const liveDate = new Date(formData.liveOn);
+        if (liveDate <= registrationDate) {
+          errors.liveOn = 'Live date must be after registration start date';
+        } else {
+          errors.liveOn = '';
+        }
+      }
+    }
+    
+    if (name === 'liveOn') {
+      const liveDate = new Date(value);
+      const registrationDate = formData.registrationStartDate ? new Date(formData.registrationStartDate) : null;
+      
+      if (registrationDate && liveDate <= registrationDate) {
+        errors.liveOn = 'Live date must be after registration start date';
+      } else if (liveDate < currentDate) {
+        errors.liveOn = 'Live date must be in the future';
+      } else {
+        errors.liveOn = '';
+      }
+      
+      // If end date is already set, re-validate it
+      if (formData.endOn) {
+        const endDate = new Date(formData.endOn);
+        if (endDate <= liveDate) {
+          errors.endOn = 'End date must be after live date';
+        } else {
+          errors.endOn = '';
+        }
+      }
+    }
+    
+    if (name === 'endOn') {
+      const endDate = new Date(value);
+      const liveDate = formData.liveOn ? new Date(formData.liveOn) : null;
+      
+      if (liveDate && endDate <= liveDate) {
+        errors.endOn = 'End date must be after live date';
+      } else if (endDate < currentDate) {
+        errors.endOn = 'End date must be in the future';
+      } else {
+        errors.endOn = '';
+      }
+    }
+    
+    setDateErrors(errors);
+    return Object.values(errors).every(error => !error);
+  };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, files } = e.target;
+    
+    if (type === 'file' && files && files[0]) {
+      const file = files[0];
+      setFormData(prev => ({
+        ...prev,
+        [name]: file
+      }));
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      // Validate dates when they change
+      if (['registrationStartDate', 'liveOn', 'endOn'].includes(name)) {
+        validateDates(name, value);
+      }
+    }
+  };
+  
+  const removeImage = () => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      image: null
     }));
+    setPreviewUrl('');
   };
 
   const handleSubmit = (e) => {
@@ -65,7 +171,22 @@ const Competitions = () => {
               </div>
 
               <CRow className="mb-3">
-                <CCol md={6}>
+                <CCol md={4}>
+                  <CFormLabel htmlFor="registrationStartDate">Registration Start</CFormLabel>
+                  <CFormInput
+                    type="datetime-local"
+                    id="registrationStartDate"
+                    name="registrationStartDate"
+                    value={formData.registrationStartDate}
+                    onChange={handleInputChange}
+                    min={new Date().toISOString().slice(0, 16)}
+                    required
+                  />
+                  {dateErrors.registrationStartDate && (
+                    <div className="text-danger small">{dateErrors.registrationStartDate}</div>
+                  )}
+                </CCol>
+                <CCol md={4}>
                   <CFormLabel htmlFor="liveOn">Live On</CFormLabel>
                   <CFormInput
                     type="datetime-local"
@@ -73,10 +194,15 @@ const Competitions = () => {
                     name="liveOn"
                     value={formData.liveOn}
                     onChange={handleInputChange}
+                    min={formData.registrationStartDate || new Date().toISOString().slice(0, 16)}
                     required
+                    disabled={!formData.registrationStartDate}
                   />
+                  {dateErrors.liveOn && (
+                    <div className="text-danger small">{dateErrors.liveOn}</div>
+                  )}
                 </CCol>
-                <CCol md={6}>
+                <CCol md={4}>
                   <CFormLabel htmlFor="endOn">End On</CFormLabel>
                   <CFormInput
                     type="datetime-local"
@@ -84,11 +210,15 @@ const Competitions = () => {
                     name="endOn"
                     value={formData.endOn}
                     onChange={handleInputChange}
+                    min={formData.liveOn || (formData.registrationStartDate || new Date().toISOString().slice(0, 16))}
                     required
+                    disabled={!formData.liveOn}
                   />
+                  {dateErrors.endOn && (
+                    <div className="text-danger small">{dateErrors.endOn}</div>
+                  )}
                 </CCol>
               </CRow>
-
 
               <div className="mb-3">
                 <CFormLabel htmlFor="competitionType">Competition Type</CFormLabel>
@@ -114,6 +244,90 @@ const Competitions = () => {
                   placeholder="Enter competition criteria"
                   required
                 />
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel htmlFor="maxParticipants">Max Participants</CFormLabel>
+                <CFormInput
+                  type="number"
+                  id="maxParticipants"
+                  name="maxParticipants"
+                  value={formData.maxParticipants}
+                  onChange={handleInputChange}
+                  placeholder="Enter maximum number of participants"
+                  min="1"
+                />
+                <CFormText>Leave empty for unlimited participants</CFormText>
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel htmlFor="description">Competition Description</CFormLabel>
+                <CFormTextarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Enter detailed competition description"
+                  rows="4"
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel htmlFor="disqualificationCriteria">Disqualification Criteria</CFormLabel>
+                <CFormTextarea
+                  id="disqualificationCriteria"
+                  name="disqualificationCriteria"
+                  value={formData.disqualificationCriteria}
+                  onChange={handleInputChange}
+                  placeholder="Enter criteria for disqualification"
+                  rows="3"
+                />
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel>Competition Image</CFormLabel>
+                <div 
+                  className={`border rounded p-4 text-center ${previewUrl ? 'border-0' : 'border-secondary'}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => document.getElementById('competitionImage').click()}
+                >
+                  {previewUrl ? (
+                    <div className="position-relative">
+                      <CImage 
+                        src={previewUrl} 
+                        alt="Competition Preview" 
+                        className="img-fluid mb-3"
+                        style={{ maxHeight: '200px' }}
+                      />
+                      <CButton 
+                        color="danger" 
+                        size="sm" 
+                        className="position-absolute top-0 end-0 m-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage();
+                        }}
+                      >
+                        Remove
+                      </CButton>
+                    </div>
+                  ) : (
+                    <>
+                      <CIcon icon={cilCloudUpload} size="3xl" className="mb-2" />
+                      <p className="mb-1">Click to upload competition image</p>
+                      <p className="text-muted small mb-0">Recommended size: 1200x630px (JPG, PNG, max 5MB)</p>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    id="competitionImage"
+                    name="image"
+                    className="d-none"
+                    accept="image/*"
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
 
               <div className="mb-3">

@@ -32,7 +32,8 @@ const mockCompetitions = [
     startDate: '2025-07-01',
     endDate: '2025-07-31',
     entryFee: 50,
-    status: 'Upcoming'
+    status: 'Draft',
+    registrationOpen: false
   },
   {
     id: 2,
@@ -41,7 +42,8 @@ const mockCompetitions = [
     startDate: '2025-12-01',
     endDate: '2025-12-15',
     entryFee: 100,
-    status: 'Upcoming'
+    status: 'Registration Open',
+    registrationOpen: true
   },
   {
     id: 3,
@@ -50,7 +52,28 @@ const mockCompetitions = [
     startDate: '2025-03-15',
     endDate: '2025-04-15',
     entryFee: 75,
-    status: 'Completed'
+    status: 'Completed',
+    registrationOpen: false
+  },
+  {
+    id: 4,
+    name: 'Autumn Classic',
+    type: 'Public',
+    startDate: '2025-09-10',
+    endDate: '2025-09-20',
+    entryFee: 60,
+    status: 'Live',
+    registrationOpen: false
+  },
+  {
+    id: 5,
+    name: 'Winter Cup',
+    type: 'Private',
+    startDate: '2025-01-10',
+    endDate: '2025-01-20',
+    entryFee: 80,
+    status: 'Cancelled',
+    registrationOpen: false
   },
 ];
 
@@ -75,13 +98,16 @@ const ViewCompetitions = () => {
     const matchesToDate = !filters.toDate || new Date(comp.endDate) <= new Date(filters.toDate);
     
     let matchesStatus = true;
-    if (filters.status === 'upcoming') {
-      matchesStatus = new Date(comp.startDate) > new Date();
-    } else if (filters.status === 'live') {
-      const today = new Date();
-      matchesStatus = new Date(comp.startDate) <= today && new Date(comp.endDate) >= today;
-    } else if (filters.status === 'finished') {
-      matchesStatus = new Date(comp.endDate) < new Date();
+    if (filters.status === 'Draft') {
+      matchesStatus = comp.status === 'Draft';
+    } else if (filters.status === 'Registration Open') {
+      matchesStatus = comp.status === 'Registration Open';
+    } else if (filters.status === 'Live') {
+      matchesStatus = comp.status === 'Live';
+    } else if (filters.status === 'Completed') {
+      matchesStatus = comp.status === 'Completed';
+    } else if (filters.status === 'Cancelled') {
+      matchesStatus = comp.status === 'Cancelled';
     }
     
     return matchesSearch && matchesFromDate && matchesToDate && matchesStatus;
@@ -186,9 +212,11 @@ const ViewCompetitions = () => {
                     onChange={handleFilterChange}
                   >
                     <option value="">All Status</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="live">Live</option>
-                    <option value="finished">Finished</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Registration Open">Registration Open</option>
+                    <option value="Live">Live</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
                   </CFormSelect>
                 </CCol>
                 <CCol md={2} className="d-flex align-items-end">
@@ -226,7 +254,13 @@ const ViewCompetitions = () => {
                         <CTableDataCell>{formatDate(comp.endDate)}</CTableDataCell>
                         <CTableDataCell>{formatCurrency(comp.entryFee)}</CTableDataCell>
                         <CTableDataCell>
-                          <span className={`badge bg-${comp.status === 'Completed' ? 'success' : 'primary'}`}>
+                          <span className={`badge bg-${
+                            comp.status === 'Completed' ? 'success' : 
+                            comp.status === 'Live' ? 'warning' :
+                            comp.status === 'Draft' ? 'secondary' :
+                            comp.status === 'Registration Open' ? 'info' :
+                            'danger' // Cancelled
+                          }`}>
                             {comp.status}
                           </span>
                         </CTableDataCell>

@@ -43,9 +43,8 @@ const mockPackages = [
   {
     id: 'pkg1',
     name: 'Starter Pack',
-    coins: 100,
-    price: 4.99,
-    discount: 0,
+    price: 10,
+    bonusPercent: 0,
     isFamous: false,
     isActive: true,
     createdAt: '2025-06-20T10:00:00Z'
@@ -53,9 +52,8 @@ const mockPackages = [
   {
     id: 'pkg2',
     name: 'Pro Pack',
-    coins: 500,
-    price: 19.99,
-    discount: 10,
+    price: 50,
+    bonusPercent: 10,
     isFamous: true,
     isActive: true,
     createdAt: '2025-06-21T15:30:00Z'
@@ -63,9 +61,8 @@ const mockPackages = [
   {
     id: 'pkg3',
     name: 'Premium Pack',
-    coins: 1000,
-    price: 34.99,
-    discount: 15,
+    price: 100,
+    bonusPercent: 20,
     isFamous: false,
     isActive: false,
     createdAt: '2025-06-22T09:15:00Z'
@@ -76,15 +73,12 @@ const Packages = () => {
   const navigate = useNavigate()
 
   // State for form inputs
-  const [rupees, setRupees] = useState('')
-  const [coinsValue, setCoinsValue] = useState('')
   const [packages, setPackages] = useState([...mockPackages]);
   const [editingPkg, setEditingPkg] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    coins: '',
     price: '',
-    discount: 0,
+    bonusPercent: 0,
     isFamous: false,
     isActive: true
   });
@@ -116,6 +110,18 @@ const Packages = () => {
     }
   }
 
+  // Calculate base coins (1 INR = 10 coins)
+  const calculateBaseCoins = (price) => {
+    return Math.round(price * 10);
+  };
+
+  // Calculate total coins including bonus
+  const calculateTotalCoins = (price, bonusPercent) => {
+    const baseCoins = calculateBaseCoins(price);
+    const bonusCoins = Math.round((baseCoins * bonusPercent) / 100);
+    return baseCoins + bonusCoins;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -124,19 +130,25 @@ const Packages = () => {
 
     try {
       // Basic validation
-      if (!formData.name || !formData.coins || !formData.price) {
-        throw new Error('Name, coins, and price are required');
+      if (!formData.name || !formData.price) {
+        throw new Error('Name and price are required');
       }
       
-      if (formData.discount < 0 || formData.discount > 100) {
-        throw new Error('Discount must be between 0 and 100');
+      const bonusPercent = parseInt(formData.bonusPercent) || 0;
+      if (bonusPercent < 0 || bonusPercent > 100) {
+        throw new Error('Bonus percentage must be between 0 and 100');
       }
+
+      const price = parseFloat(formData.price);
+      const baseCoins = calculateBaseCoins(price);
+      const totalCoins = calculateTotalCoins(price, bonusPercent);
 
       const packageData = {
         name: formData.name,
-        coins: parseInt(formData.coins),
-        price: parseFloat(formData.price),
-        discount: parseInt(formData.discount) || 0,
+        price: price,
+        bonus_percent: bonusPercent,
+        base_coins: baseCoins,
+        total_coins: totalCoins,
         is_famous: formData.isFamous,
         is_active: formData.isActive,
         created_at: new Date().toISOString(),
@@ -172,9 +184,8 @@ const Packages = () => {
       // Reset form
       setFormData({
         name: '',
-        coins: '',
         price: '',
-        discount: 0,
+        bonusPercent: 0,
         isFamous: false,
         isActive: true
       });
@@ -191,9 +202,8 @@ const Packages = () => {
   const handleEdit = (pkg) => {
     setFormData({
       name: pkg.name,
-      coins: pkg.coins,
       price: pkg.price,
-      discount: pkg.discount || 0,
+      bonusPercent: pkg.bonusPercent || 0,
       isFamous: pkg.isFamous || false,
       isActive: pkg.isActive !== false // Default to true if undefined
     });
@@ -239,10 +249,24 @@ const Packages = () => {
     }
   };
   
-  const calculateDiscountedPrice = (price, discount) => {
-    if (!discount) return price;
-    const discountAmount = (price * discount) / 100;
-    return (price - discountAmount).toFixed(2);
+  // Calculate coins display text
+  const getCoinsDisplay = (pkg) => {
+    const baseCoins = calculateBaseCoins(pkg.price);
+    const totalCoins = calculateTotalCoins(pkg.price, pkg.bonusPercent || 0);
+    
+    if (pkg.bonusPercent > 0) {
+      return (
+        <>
+          <span className="text-decoration-line-through text-muted me-2">
+            {baseCoins.toLocaleString()} coins
+          </span>
+          <span className="text-success fw-bold">
+            {totalCoins.toLocaleString()} coins ({pkg.bonusPercent}% bonus)
+          </span>
+        </>
+      );
+    }
+    return <span>{baseCoins.toLocaleString()} coins</span>;
   };
 
   return (
@@ -271,58 +295,50 @@ const Packages = () => {
                   />
                   <CFormFeedback>Package name is required</CFormFeedback>
                 </CCol>
-                <CCol md={6}>
-                  <CFormLabel htmlFor="coins">Number of Coins</CFormLabel>
-                  <CFormInput
-                    type="number"
-                    id="coins"
-                    min="1"
-                    value={formData.coins}
-                    onChange={(e) => setFormData({...formData, coins: e.target.value})}
-                    placeholder="Enter number of coins"
-                    required
-                    invalid={!formData.coins && formData.coins !== ''}
-                  />
-                  <CFormFeedback>Number of coins is required</CFormFeedback>
-                </CCol>
               </CRow>
               
               <CRow className="mb-3">
                 <CCol md={4}>
-                  <CFormLabel htmlFor="price">Price ($)</CFormLabel>
+                  <CFormLabel htmlFor="price">Price (INR)</CFormLabel>
                   <CInputGroup>
-                    <CInputGroupText>
-                      <CIcon icon={cilDollar} />
-                    </CInputGroupText>
+                    <CInputGroupText>₹</CInputGroupText>
                     <CFormInput
                       type="number"
                       id="price"
-                      min="0.01"
-                      step="0.01"
+                      min="1"
+                      step="1"
                       value={formData.price}
                       onChange={(e) => setFormData({...formData, price: e.target.value})}
-                      placeholder="0.00"
+                      placeholder="Enter amount in INR"
                       required
                       invalid={!formData.price && formData.price !== ''}
                     />
                   </CInputGroup>
+                  <div className="small text-muted mt-1">
+                    {formData.price ? (
+                      <span>{calculateBaseCoins(parseFloat(formData.price)).toLocaleString()} coins</span>
+                    ) : '1 INR = 10 coins'}
+                  </div>
                   <CFormFeedback>Price is required</CFormFeedback>
                 </CCol>
                 
                 <CCol md={4}>
-                  <CFormLabel htmlFor="discount">Discount (%)</CFormLabel>
-                  <CFormInput
-                    type="number"
-                    id="discount"
-                    min="0"
-                    max="100"
-                    value={formData.discount}
-                    onChange={(e) => setFormData({...formData, discount: e.target.value})}
-                    placeholder="0"
-                  />
-                  {formData.discount > 0 && (
+                  <CFormLabel htmlFor="bonusPercent">Bonus Coins (%)</CFormLabel>
+                  <CInputGroup>
+                    <CFormInput
+                      type="number"
+                      id="bonusPercent"
+                      min="0"
+                      max="100"
+                      value={formData.bonusPercent}
+                      onChange={(e) => setFormData({...formData, bonusPercent: e.target.value})}
+                      placeholder="0"
+                    />
+                    <CInputGroupText>%</CInputGroupText>
+                  </CInputGroup>
+                  {formData.price && formData.bonusPercent > 0 && (
                     <div className="small text-muted mt-1">
-                      Final Price: ${calculateDiscountedPrice(formData.price || 0, formData.discount)}
+                      {Math.round((calculateBaseCoins(parseFloat(formData.price)) * formData.bonusPercent) / 100).toLocaleString()} bonus coins
                     </div>
                   )}
                 </CCol>
@@ -337,11 +353,12 @@ const Packages = () => {
                       onChange={(e) => setFormData({...formData, isFamous: e.target.checked})}
                     />
                     <CFormCheck
-                      type="switch"
+                      type="checkbox"
                       id="isActive"
                       label="Active"
                       checked={formData.isActive}
                       onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                      className="ms-3"
                     />
                   </div>
                 </CCol>
@@ -359,7 +376,6 @@ const Packages = () => {
                     onClick={() => {
                       setFormData({
                         name: '',
-                        coins: '',
                         price: '',
                         discount: 0,
                         isFamous: false,
@@ -394,9 +410,8 @@ const Packages = () => {
                   <CTableHead>
                     <CTableRow>
                       <CTableHeaderCell>Package</CTableHeaderCell>
-                      <CTableHeaderCell>Coins</CTableHeaderCell>
                       <CTableHeaderCell>Price</CTableHeaderCell>
-                      <CTableHeaderCell>Discount</CTableHeaderCell>
+                      <CTableHeaderCell>Coins</CTableHeaderCell>
                       <CTableHeaderCell>Status</CTableHeaderCell>
                       <CTableHeaderCell>Actions</CTableHeaderCell>
                     </CTableRow>
@@ -415,29 +430,15 @@ const Packages = () => {
                             )}
                           </div>
                         </CTableDataCell>
-                        <CTableDataCell>{pkg.coins.toLocaleString()}</CTableDataCell>
                         <CTableDataCell>
-                          <div>
-                            {pkg.discount > 0 ? (
-                              <>
-                                <span className="text-decoration-line-through text-muted me-2">
-                                  ${pkg.price.toFixed(2)}
-                                </span>
-                                <span className="text-danger fw-bold">
-                                  ${calculateDiscountedPrice(pkg.price, pkg.discount)}
-                                </span>
-                              </>
-                            ) : (
-                              `$${pkg.price.toFixed(2)}`
-                            )}
+                          <div className="fw-bold">
+                            ₹{parseInt(pkg.price).toLocaleString()}
                           </div>
                         </CTableDataCell>
                         <CTableDataCell>
-                          {pkg.discount > 0 ? (
-                            <CBadge color="success">{pkg.discount}% OFF</CBadge>
-                          ) : (
-                            <span className="text-muted">-</span>
-                          )}
+                          <div className="d-flex flex-column">
+                            {getCoinsDisplay(pkg)}
+                          </div>
                         </CTableDataCell>
                         <CTableDataCell>
                           <CFormSwitch
