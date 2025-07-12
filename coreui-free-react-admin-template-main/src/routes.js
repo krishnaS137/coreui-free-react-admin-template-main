@@ -10,7 +10,8 @@ const NotificationHistory = React.lazy(() => import('./views/notification-histor
 const Competitions = React.lazy(() => import('./views/competitions'))
 const ViewCompetitions = React.lazy(() => import('./views/competitions/ViewCompetitions'))
 const Videos = React.lazy(() => import('./views/videos'))
-const WithdrawRequests = React.lazy(() => import('./views/withdraw-requests'))
+const WithdrawRequests = React.lazy(() => import('./views/withdraw-requests/WithdrawRequests'))
+const WithdrawRequestDetail = React.lazy(() => import('./views/withdraw-requests/WithdrawRequestDetail'))
 const Feedbacks = React.lazy(() => import('./views/feedbacks'))
 const SubAdmin = React.lazy(() => import('./views/sub-admins'))
 const Tasks = React.lazy(() => import('./views/tasks'))
@@ -73,7 +74,8 @@ const routes = [
   { path: '/competitions/:id', name: 'Competition Details', element: () => <div>Competition Details</div> },
   { path: '/videos', name: 'Videos', element: Videos },
   { path: '/withdraw-requests', name: 'Withdraw Requests', element: WithdrawRequests },
-  { path: '/feedbacks', name: 'Feedbacks', element: Feedbacks },
+  { path: '/withdraw-requests/:id', name: 'Withdraw Request Details', element: WithdrawRequestDetail },
+  { path: '/tickets', name: 'Tickets', element: Feedbacks },
   { path: '/sub-admins', name: 'Sub-Admins', element: SubAdmin },
   { path: '/tasks', name: 'Tasks', element: Tasks },
   { path: '/widgets', name: 'Widgets', element: Widgets },

@@ -1,23 +1,41 @@
-# Feedbacks Management
+# Tickets Management
 
-This document provides an overview of the Feedbacks management feature in the admin panel.
+This document provides an overview of the Tickets management feature in the admin panel, which replaces the previous Feedbacks system.
 
 ## Overview
-The Feedbacks section allows administrators to view, manage, and respond to user feedback. It provides tools to track feedback status and maintain communication with users.
+The Tickets section allows administrators to manage user support requests and inquiries. It provides a comprehensive system for tracking, categorizing, and responding to user tickets with support for file attachments.
 
 ## Features
 
-### Feedback List
-- Displays all feedback in a sortable and paginated table
-- Filter feedback by status: Pending or Replied
-- Search functionality to find feedback by username, message, or ID
+### Ticket List
+- Displays all support tickets in a sortable and paginated table
+- Filter tickets by status (Pending/Replied) and subject category
+- Search functionality to find tickets by subject, username, message content, or ticket ID
 - Pagination for easy navigation
+- Visual indicators for tickets with attachments
 
-### Feedback Details & Reply
-- View detailed feedback information
-- Reply to feedback directly from the interface
-- View reply history
-- Mark feedback as resolved
+### Ticket Details & Management
+- View complete ticket information including user details and submission date
+- Categorization using predefined subject types
+- Image attachment support with thumbnail previews
+- Reply directly to tickets through the interface
+- View complete communication history
+- Update ticket status (Pending/Replied)
+
+### Subject Categories
+Tickets are organized into the following subject categories:
+1. **Account** - For account-related issues (login, profile, etc.)
+2. **Competition** - Questions or issues about competitions
+3. **Withdraw coins** - Withdrawal requests and related inquiries
+4. **Purchase Packages** - Issues with package purchases
+5. **Account Deactivation** - Requests for account deactivation
+6. **Others** - Any other type of inquiry
+
+### Image Attachments
+- Users can attach images when submitting tickets
+- Thumbnail previews in the ticket list
+- Full-size image view in the ticket details
+- Multiple images supported per ticket
 
 ## Components
 

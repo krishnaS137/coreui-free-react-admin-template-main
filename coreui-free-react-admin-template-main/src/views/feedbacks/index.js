@@ -1,1 +1,1 @@
-export { default } from './Feedbacks';
+export { default } from './Tickets';

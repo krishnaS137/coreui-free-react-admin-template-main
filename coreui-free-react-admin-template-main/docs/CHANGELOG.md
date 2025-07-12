@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Redesigned Withdraw Requests with an improved workflow:
+  - Added new status options: Pending, Approved, Processing, Completed, Rejected, Cancelled
+  - Created a dedicated detail page for each withdraw request
+  - Removed inline approve/decline buttons in favor of a detail view
+  - Added admin notes and status tracking
+  - Improved status filtering and search functionality
+  - Added visual indicators for different statuses
+
+- Renamed 'Feedbacks' to 'Tickets' throughout the application
+- Completely redesigned Tickets system with the following improvements:
+  - Added subject-based categorization with 6 predefined types:
+    - Others
+    - Competition
+    - Account
+    - Withdraw coins
+    - Purchase Packages
+    - Account Deactivation
+  - Removed ratings column and replaced with subject badges
+  - Added image upload support with thumbnail previews
+  - Enhanced ticket details view with better organization
+  - Improved search functionality to include subject and message content
+  - Updated status indicators and action buttons for better UX
+  - Added visual indicators for tickets with attachments
+  - Improved mobile responsiveness of the tickets table
 - Renamed 'Coins' to 'Packages' in the navigation menu
 - Updated route from '/coins' to '/packages' for better semantics
 - Completely redesigned Packages page with new coin calculation system:
