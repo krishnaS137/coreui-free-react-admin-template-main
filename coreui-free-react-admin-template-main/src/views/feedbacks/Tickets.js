@@ -34,17 +34,31 @@ import {
 import { cilChatBubble, cilSearch, cilArrowRight, cilCheckCircle, cilClock } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 
+// Allowed ticket subjects
+const TICKET_SUBJECTS = [
+  'Others',
+  'Competition',
+  'Account',
+  'Withdraw coins',
+  'Purchase Packages',
+  'Account Deactivation'
+];
+
 // Mock data - replace with actual API call
-const mockFeedbacks = [
+const mockTickets = [
   {
-    id: 'FB001',
+    id: 'TKT001',
     userId: 'USR1001',
     username: 'johndoe',
     phone: '+1 (555) 123-4567',
     email: 'john.doe@example.com',
-    message: 'The app keeps crashing when I try to upload a video. Please fix this issue as soon as possible.',
-    rating: 2,
+    subject: 'Account',
+    message: 'I am unable to log into my account. It says invalid credentials.',
     status: 'pending',
+    images: [
+      'https://example.com/images/login-issue.jpg',
+      'https://example.com/images/error-message.jpg'
+    ],
     createdAt: '2025-06-22T09:30:00Z',
     repliedAt: null,
     adminReply: null
@@ -105,7 +119,7 @@ const mockFeedbacks = [
 
 const ITEMS_PER_PAGE = 10;
 
-const Feedbacks = () => {
+const Tickets = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
     status: 'pending', // Default to showing pending feedbacks
@@ -117,21 +131,35 @@ const Feedbacks = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [showReplyModal, setShowReplyModal] = useState(false);
 
-  const filteredFeedbacks = mockFeedbacks.filter(feedback => {
-    const matchesStatus = filters.status === 'all' || feedback.status === filters.status;
+  const filteredTickets = mockTickets.filter(ticket => {
+    const matchesStatus = filters.status === 'all' || ticket.status === filters.status;
     const matchesSearch = !filters.search || 
-      feedback.username.toLowerCase().includes(filters.search.toLowerCase()) ||
-      feedback.message.toLowerCase().includes(filters.search.toLowerCase()) ||
-      feedback.id.toLowerCase().includes(filters.search.toLowerCase());
+      ticket.username.toLowerCase().includes(filters.search.toLowerCase()) ||
+      ticket.message.toLowerCase().includes(filters.search.toLowerCase()) ||
+      ticket.subject.toLowerCase().includes(filters.search.toLowerCase()) ||
+      ticket.id.toLowerCase().includes(filters.search.toLowerCase());
     
     return matchesStatus && matchesSearch;
   });
 
-  const totalPages = Math.ceil(filteredFeedbacks.length / ITEMS_PER_PAGE);
-  const paginatedFeedbacks = filteredFeedbacks.slice(
+  const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
+  const paginatedTickets = filteredTickets.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+  
+  // Function to get badge color based on subject
+  const getSubjectBadge = (subject) => {
+    const colors = {
+      'Others': 'secondary',
+      'Competition': 'info',
+      'Account': 'primary',
+      'Withdraw coins': 'warning',
+      'Purchase Packages': 'success',
+      'Account Deactivation': 'danger'
+    };
+    return <CBadge color={colors[subject] || 'secondary'}>{subject}</CBadge>;
+  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -142,10 +170,16 @@ const Feedbacks = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const handleReplyClick = (feedback) => {
-    setSelectedFeedback(feedback);
-    setReplyText(feedback.adminReply || '');
+  const handleReplyClick = (ticket) => {
+    setSelectedFeedback(ticket);
+    setReplyText(ticket.adminReply || '');
     setShowReplyModal(true);
+  };
+  
+  // Function to handle image click (show in modal)
+  const handleImageClick = (imageUrl) => {
+    // In a real app, you might want to open a lightbox here
+    window.open(imageUrl, '_blank');
   };
 
   const handleSendReply = () => {
@@ -188,8 +222,24 @@ const Feedbacks = () => {
     }
   };
 
-  const getRatingStars = (rating) => {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  // Function to render image thumbnails
+  const renderImageThumbnails = (images) => {
+    if (!images || images.length === 0) return 'No images';
+    
+    return (
+      <div className="d-flex gap-2">
+        {images.map((img, index) => (
+          <img 
+            key={index} 
+            src={img} 
+            alt={`Attachment ${index + 1}`} 
+            style={{ width: '40px', height: '40px', objectFit: 'cover', cursor: 'pointer' }}
+            onClick={() => handleImageClick(img)}
+            className="border rounded"
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -200,7 +250,7 @@ const Feedbacks = () => {
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">
                 <CIcon icon={cilChatBubble} className="me-2" />
-                Feedbacks
+                Support Tickets
               </h5>
             </div>
           </CCardHeader>
@@ -214,7 +264,7 @@ const Feedbacks = () => {
                     value={filters.status}
                     onChange={handleFilterChange}
                   >
-                    <option value="all">All Feedbacks</option>
+                    <option value="all">All Tickets</option>
                     <option value="pending">Pending</option>
                     <option value="replied">Replied</option>
                   </CFormSelect>
@@ -227,7 +277,7 @@ const Feedbacks = () => {
                     </CInputGroupText>
                     <CFormInput 
                       name="search"
-                      placeholder="Search by username, message, or ID..." 
+                      placeholder="Search by subject, username, or message..." 
                       value={filters.search}
                       onChange={handleFilterChange}
                     />
@@ -253,54 +303,58 @@ const Feedbacks = () => {
               <CTable hover>
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell>ID</CTableHeaderCell>
+                    <CTableHeaderCell>Ticket ID</CTableHeaderCell>
+                    <CTableHeaderCell>Subject</CTableHeaderCell>
                     <CTableHeaderCell>User</CTableHeaderCell>
                     <CTableHeaderCell>Message</CTableHeaderCell>
-                    <CTableHeaderCell>Rating</CTableHeaderCell>
+                    <CTableHeaderCell>Images</CTableHeaderCell>
                     <CTableHeaderCell>Date</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {paginatedFeedbacks.length > 0 ? (
-                    paginatedFeedbacks.map(feedback => (
-                      <CTableRow key={feedback.id}>
+                  {paginatedTickets.length > 0 ? (
+                    paginatedTickets.map(ticket => (
+                      <CTableRow key={ticket.id}>
                         <CTableDataCell>
-                          <small className="text-muted">{feedback.id}</small>
+                          <small className="text-muted">{ticket.id}</small>
                         </CTableDataCell>
                         <CTableDataCell>
-                          <div><strong>@{feedback.username}</strong></div>
-                          <small className="text-muted">{feedback.phone}</small>
+                          {getSubjectBadge(ticket.subject)}
                         </CTableDataCell>
                         <CTableDataCell>
-                          <div className="text-truncate" style={{ maxWidth: '300px' }} title={feedback.message}>
-                            {feedback.message}
+                          <div><strong>@{ticket.username}</strong></div>
+                          <small className="text-muted">{ticket.phone || 'N/A'}</small>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <div className="text-truncate" style={{ maxWidth: '200px' }} title={ticket.message}>
+                            {ticket.message}
                           </div>
                         </CTableDataCell>
                         <CTableDataCell>
-                          <span className="text-warning">{getRatingStars(feedback.rating)}</span>
+                          {renderImageThumbnails(ticket.images)}
                         </CTableDataCell>
                         <CTableDataCell>
-                          <div>{formatDate(feedback.createdAt)}</div>
-                          {feedback.repliedAt && (
+                          <div>{formatDate(ticket.createdAt)}</div>
+                          {ticket.repliedAt && (
                             <small className="text-muted">
-                              Replied: {formatDate(feedback.repliedAt)}
+                              Replied: {formatDate(ticket.repliedAt)}
                             </small>
                           )}
                         </CTableDataCell>
                         <CTableDataCell>
-                          {getStatusBadge(feedback.status)}
+                          {getStatusBadge(ticket.status)}
                         </CTableDataCell>
                         <CTableDataCell>
                           <div className="d-flex gap-2">
                             <CButton 
-                              color={feedback.status === 'replied' ? 'info' : 'primary'}
+                              color={ticket.status === 'replied' ? 'info' : 'primary'}
                               size="sm" 
-                              onClick={() => handleReplyClick(feedback)}
+                              onClick={() => handleReplyClick(ticket)}
                             >
-                              <CIcon icon={feedback.status === 'replied' ? cilCheckCircle : cilArrowRight} className="me-1" />
-                              {feedback.status === 'replied' ? 'View Reply' : 'Reply'}
+                              <CIcon icon={ticket.status === 'replied' ? cilCheckCircle : cilArrowRight} className="me-1" />
+                              {ticket.status === 'replied' ? 'View' : 'Reply'}
                             </CButton>
                           </div>
                         </CTableDataCell>
@@ -308,8 +362,8 @@ const Feedbacks = () => {
                     ))
                   ) : (
                     <CTableRow>
-                      <CTableDataCell colSpan="7" className="text-center">
-                        No feedback found matching your criteria
+                      <CTableDataCell colSpan="8" className="text-center">
+                        No tickets found matching your criteria
                       </CTableDataCell>
                     </CTableRow>
                   )}
@@ -356,7 +410,7 @@ const Feedbacks = () => {
       >
         <CModalHeader onDismiss={() => setShowReplyModal(false)}>
           <CModalTitle>
-            {selectedFeedback?.status === 'replied' ? 'View Reply' : 'Reply to Feedback'}
+            {selectedFeedback?.status === 'replied' ? 'View Ticket' : 'Reply to Ticket'}
           </CModalTitle>
         </CModalHeader>
         <CModalBody>
@@ -364,13 +418,33 @@ const Feedbacks = () => {
             <>
               <div className="mb-3">
                 <h6>From: @{selectedFeedback.username}</h6>
-                <p className="mb-2"><strong>Feedback:</strong></p>
+                <div className="mb-2">
+                  <strong>Subject:</strong> {selectedFeedback.subject}
+                </div>
+                <p className="mb-2"><strong>Message:</strong></p>
                 <div className="p-3 bg-light rounded">
                   {selectedFeedback.message}
                 </div>
                 <div className="mt-2 small text-muted">
                   Submitted on: {formatDate(selectedFeedback.createdAt)}
                 </div>
+                {selectedFeedback.images && selectedFeedback.images.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-2"><strong>Attached Images:</strong></p>
+                    <div className="d-flex gap-2 flex-wrap">
+                      {selectedFeedback.images.map((img, index) => (
+                        <img 
+                          key={index} 
+                          src={img} 
+                          alt={`Attachment ${index + 1}`}
+                          style={{ maxWidth: '100px', maxHeight: '100px', cursor: 'pointer' }}
+                          onClick={() => handleImageClick(img)}
+                          className="img-thumbnail"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {selectedFeedback.status === 'replied' && selectedFeedback.repliedAt && (
                   <div className="mt-3">
                     <p className="mb-2"><strong>Previous Reply:</strong></p>
@@ -430,4 +504,4 @@ const Feedbacks = () => {
   );
 };
 
-export default Feedbacks;
+export default Tickets;

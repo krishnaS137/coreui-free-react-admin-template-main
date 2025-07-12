@@ -23,7 +23,15 @@ import {
   CPagination,
   CPaginationItem
 } from '@coreui/react';
-import { cilDollar, cilSearch, cilCheckCircle, cilXCircle, cilClock } from '@coreui/icons';
+import { useNavigate } from 'react-router-dom';
+import { 
+  cilDollar, 
+  cilSearch, 
+  cilInfo, 
+  cilClock, 
+  cilCheckCircle, 
+  cilXCircle 
+} from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 
 // Mock data - replace with actual API call
@@ -37,7 +45,8 @@ const mockWithdrawRequests = [
     accountDetails: 'XXXX-XXXX-7890',
     status: 'Pending',
     requestedAt: '2025-06-20T10:30:00Z',
-    processedAt: null
+    processedAt: null,
+    adminNotes: ''
   },
   {
     id: 'WD002',
@@ -46,9 +55,10 @@ const mockWithdrawRequests = [
     amount: 150.50,
     paymentMethod: 'PayPal',
     accountDetails: 'jane.doe@example.com',
-    status: 'Completed',
+    status: 'Approved',
     requestedAt: '2025-06-19T14:20:00Z',
-    processedAt: '2025-06-19T16:45:00Z'
+    processedAt: '2025-06-19T14:30:00Z',
+    adminNotes: 'Auto-approved, meets all criteria'
   },
   {
     id: 'WD003',
@@ -57,10 +67,10 @@ const mockWithdrawRequests = [
     amount: 500.00,
     paymentMethod: 'Crypto',
     accountDetails: '0x1234...abcd',
-    status: 'Declined',
+    status: 'Processing',
     requestedAt: '2025-06-18T09:15:00Z',
     processedAt: '2025-06-18T11:30:00Z',
-    declineReason: 'Insufficient balance'
+    adminNotes: 'Pending bank transfer'
   },
   {
     id: 'WD004',
@@ -69,9 +79,11 @@ const mockWithdrawRequests = [
     amount: 75.25,
     paymentMethod: 'Bank Transfer',
     accountDetails: 'XXXX-XXXX-1234',
-    status: 'Pending',
+    status: 'Completed',
     requestedAt: '2025-06-21T16:45:00Z',
-    processedAt: null
+    processedAt: '2025-06-21T17:30:00Z',
+    completedAt: '2025-06-22T09:15:00Z',
+    adminNotes: 'Payment processed successfully'
   },
   {
     id: 'WD005',
@@ -80,15 +92,29 @@ const mockWithdrawRequests = [
     amount: 320.75,
     paymentMethod: 'PayPal',
     accountDetails: 'mike.b@example.com',
-    status: 'Completed',
+    status: 'Rejected',
     requestedAt: '2025-06-20T11:20:00Z',
-    processedAt: '2025-06-20T13:10:00Z'
+    processedAt: '2025-06-20T12:10:00Z',
+    adminNotes: 'Insufficient verification documents provided'
+  },
+  {
+    id: 'WD006',
+    userId: 'USR1006',
+    username: 'sarahk',
+    amount: 120.00,
+    paymentMethod: 'Bank Transfer',
+    accountDetails: 'XXXX-XXXX-5678',
+    status: 'Cancelled',
+    requestedAt: '2025-06-22T09:30:00Z',
+    cancelledAt: '2025-06-22T10:15:00Z',
+    adminNotes: 'Cancelled by user'
   }
 ];
 
 const ITEMS_PER_PAGE = 10;
 
 const WithdrawRequests = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     status: '',
     search: ''
@@ -138,7 +164,12 @@ const WithdrawRequests = () => {
     switch (status) {
       case 'Completed':
         return <CBadge color="success">{status}</CBadge>;
-      case 'Declined':
+      case 'Approved':
+        return <CBadge color="info">{status}</CBadge>;
+      case 'Processing':
+        return <CBadge color="primary">{status}</CBadge>;
+      case 'Rejected':
+      case 'Cancelled':
         return <CBadge color="danger">{status}</CBadge>;
       case 'Pending':
       default:
@@ -150,7 +181,12 @@ const WithdrawRequests = () => {
     switch (status) {
       case 'Completed':
         return <CIcon icon={cilCheckCircle} className="me-1" />;
-      case 'Declined':
+      case 'Approved':
+        return <CIcon icon={cilCheckCircle} className="me-1" />;
+      case 'Processing':
+        return <CIcon icon={cilClock} className="me-1" />;
+      case 'Rejected':
+      case 'Cancelled':
         return <CIcon icon={cilXCircle} className="me-1" />;
       case 'Pending':
       default:
@@ -194,8 +230,11 @@ const WithdrawRequests = () => {
                   >
                     <option value="">All Status</option>
                     <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Processing">Processing</option>
                     <option value="Completed">Completed</option>
-                    <option value="Declined">Declined</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Cancelled">Cancelled</option>
                   </CFormSelect>
                 </CCol>
                 <CCol md={6}>
@@ -272,36 +311,14 @@ const WithdrawRequests = () => {
                           )}
                         </CTableDataCell>
                         <CTableDataCell>
-                          <div className="d-flex gap-2">
-                            {request.status === 'Pending' && (
-                              <>
-                                <CButton 
-                                  color="success" 
-                                  size="sm" 
-                                  onClick={() => handleStatusUpdate(request.id, 'Completed')}
-                                  disabled={isProcessing}
-                                >
-                                  {isProcessing ? <CSpinner size="sm" /> : 'Approve'}
-                                </CButton>
-                                <CButton 
-                                  color="danger" 
-                                  size="sm" 
-                                  onClick={() => handleStatusUpdate(request.id, 'Declined')}
-                                  disabled={isProcessing}
-                                >
-                                  {isProcessing ? <CSpinner size="sm" /> : 'Decline'}
-                                </CButton>
-                              </>
-                            )}
-                            <CButton 
-                              color="info" 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => console.log('View details', request.id)}
-                            >
-                              Details
-                            </CButton>
-                          </div>
+                          <CButton 
+                            color="primary" 
+                            size="sm" 
+                            onClick={() => navigate(`/withdraw-requests/${request.id}`)}
+                          >
+                            <CIcon icon={cilInfo} className="me-1" />
+                            View Details
+                          </CButton>
                         </CTableDataCell>
                       </CTableRow>
                     ))

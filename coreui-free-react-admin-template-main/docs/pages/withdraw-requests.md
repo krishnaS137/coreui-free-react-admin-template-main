@@ -1,47 +1,74 @@
 # Withdraw Requests Management
 
-This document provides an overview of the Withdraw Requests management feature in the admin panel.
+This document provides an overview of the Withdraw Requests management feature in the admin panel, which has been recently updated with a new workflow and additional status options.
 
 ## Overview
-The Withdraw Requests section allows administrators to manage withdrawal requests from users, including viewing request details, approving, and declining requests.
+The Withdraw Requests section allows administrators to manage withdrawal requests from users through a streamlined workflow. The updated system now includes a dedicated detail view for each request and supports additional status options for better tracking of the withdrawal process.
 
 ## Features
 
 ### Withdraw Requests List
-- Displays all withdrawal requests in a paginated table
-- Filter requests by status: Pending, Completed, or Declined
-- Search functionality to find requests by username or request ID
+- Displays all withdrawal requests in a sortable and paginated table
+- Filter requests by status: Pending, Approved, Processing, Completed, Rejected, or Cancelled
+- Search functionality to find requests by username, request ID, or amount
 - Pagination for easy navigation through the list
-- Detailed view of each request including:
+- Visual indicators for different request statuses
+- Quick view of essential information:
   - Request ID
   - Username
   - Amount
-  - Payment method and account details
-  - Request and processing timestamps
-  - Current status with visual indicators
+  - Payment method
+  - Request date
+  - Current status with color-coded badges
 
-### Request Actions
-- **Approve**: Mark a pending request as completed
-- **Decline**: Reject a pending request (with optional reason)
-- **View Details**: See complete request information
+### Request Details Page
+- **Comprehensive Request Information**:
+  - User details (username, email, user ID)
+  - Transaction details (amount, payment method, account details)
+  - Status history and timeline
+  - User-provided notes
+  - Admin notes and internal comments
+
+- **Status Management**:
+  - Update status through a dedicated interface
+  - All status transitions are supported:
+    - Pending → Approved/Rejected/Cancelled
+    - Approved → Processing/Rejected/Cancelled
+    - Processing → Completed/Rejected
+  - Add admin notes with each status update
+
+- **Timeline View**:
+  - Track the complete history of the request
+  - View timestamps for each status change
+  - See which admin processed each update
 
 ## Components
 
 ### WithdrawRequests.js
-Main component that handles the display and management of withdrawal requests.
+Main component that displays the list of withdrawal requests with filtering and search capabilities.
 
 #### State
 - `filters`: Object containing current filter values
-  - `status`: Selected status filter (All, Pending, Completed, Declined)
+  - `status`: Selected status filter (All, Pending, Approved, Processing, Completed, Rejected, Cancelled)
   - `search`: Current search term
 - `currentPage`: Current page number for pagination
-- `isProcessing`: Loading state during request processing
+- `isLoading`: Loading state during data fetching
+
+### WithdrawRequestDetail.js
+Component that handles the detailed view and processing of individual withdrawal requests.
+
+#### State
+- `request`: Current request data
+- `loading`: Loading state during data fetching
+- `saving`: Loading state during save operations
+- `error`: Error message if any
+- `success`: Success message after updates
+- `formData`: Current form data for status updates
 
 #### Methods
-- `handleFilterChange`: Updates filters when dropdown or search input changes
-- `handleStatusUpdate`: Handles approving or declining requests
+- `handleStatusChange`: Updates form data when inputs change
+- `handleSubmit`: Submits the status update
 - `getStatusBadge`: Returns a styled badge based on request status
-- `getStatusIcon`: Returns an icon based on request status
 - `formatDate`: Formats date strings for display
 - `formatCurrency`: Formats currency values consistently
 

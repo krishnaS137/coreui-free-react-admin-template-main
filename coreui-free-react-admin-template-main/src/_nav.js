@@ -72,8 +72,8 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Feedbacks',
-    to: '/feedbacks',
+    name: 'Tickets',
+    to: '/tickets',
     icon: <CIcon icon={cilChatBubble} customClassName="nav-icon" />,
   },
   {
