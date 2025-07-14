@@ -18,10 +18,9 @@ import {
 } from '@coreui/react';
 import { cilCloudUpload } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
-
 const Competitions = () => {
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     competitionName: '',
     registrationStartDate: '',
