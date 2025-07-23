@@ -3,126 +3,109 @@
 This document provides an overview of the Sub-Admin management feature in the admin panel.
 
 ## Overview
-The Sub-Admin Management section allows administrators to grant and manage administrative access to other users. This feature helps in delegating administrative tasks while maintaining control over access levels.
+The Sub-Admin Management section allows administrators to manage administrative access for other users. This feature helps in delegating administrative tasks while maintaining control over access levels.
+
+> **Note:** This feature is currently in development and uses mock data. The UI is ready for backend integration.
 
 ## Features
 
-### User Search and Selection
-- Search for users by username, email, or phone number
-- View search results in a sortable table
-- Select a user to grant sub-admin access
+### User Management
+- View list of all sub-admins
+- Add new sub-admins from existing employees
+- Edit existing sub-admin permissions
+- Remove sub-admin access when needed
 
-### Access Level Assignment
-- Choose between different access levels:
-  - **Limited Access**: Predefined set of permissions (Notifications, Competitions, Videos, Feedback)
-  - **Full Access**: Complete administrative privileges across all sections
-  - **Custom Access**: Granular control over specific permissions
+### Role-Based Access Control (RBAC)
+- **Super Admin**: Full access to all features
+- **Admin**: Customizable access based on permissions
+- **Employee**: Basic access with limited permissions
 
-### Permission Management
+### Permission Management (Planned)
 - Granular control over access to each management section:
   - User Management
   - Sub-Admin Management
   - Notifications Management
   - Competitions Management
-  - Coins Management
   - Videos Management
   - Withdraw Management
   - Feedback Management
 
-### Current Sub-Admins List
-- View all current sub-admins in a sortable table
-- See assigned access levels and permission counts
-- View last updated timestamp
-- Edit existing sub-admin permissions
-- Remove sub-admin access when no longer needed
+## Current Implementation Status
 
-### Current Implementation
-- Mock data is currently used for demonstration
-- Ready to be connected to a real API
+### Data Storage
+- Currently uses mock data stored in `src/views/sub-admins/SubAdmin.js`
+- Ready for backend integration with the `employees` table
+
+### UI Components
+- **SubAdmin.js**: Main component for managing sub-admins
+- **User Search**: Search functionality to find employees
+- **Permission Toggles**: UI for managing access levels
+- **Confirmation Dialogs**: For critical actions like removal
+
+### Technical Details
+- Built with React and CoreUI components
+- Uses React hooks for state management
 - Responsive design that works on all screen sizes
-- Real-time updates when adding, editing, or removing sub-admins
-- Confirmation dialogs for destructive actions
 - Loading states during operations
+- Error handling for API interactions
 
-## Components
+## Database Schema (Planned)
 
-### SubAdmin.js
-Main component that handles the sub-admin management interface.
+```sql
+-- Employees table (existing)
+CREATE TABLE employees (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  full_name VARCHAR(255),
+  role VARCHAR(50) NOT NULL, -- 'super_admin', 'admin', 'employee'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-#### State
-- `subAdmins`: Array of current sub-admin users
-- `editingSubAdmin`: ID of sub-admin being edited (null if adding new)
-- `searchTerm`: Current search query
-- `selectedUser`: Currently selected user for sub-admin assignment
-- `isAdding`: Boolean to track if in "add sub-admin" mode
-- `isLoading`: Loading state for API calls
-- `message`: Status messages (success/error)
-- `accessLevel`: Currently selected access level
-- `permissions`: Object containing all permission toggles
-
-#### Methods
-- `handleSearch`: Handles search form submission
-- `handleUserSelect`: Selects a user for sub-admin assignment
-- `handleSubmit`: Submits a new sub-admin assignment
-- `handleUpdate`: Updates an existing sub-admin's permissions
-- `handleEdit`: Loads a sub-admin's data into the edit form
-- `handleRemove`: Removes a sub-admin's access
-- `handleCancel`: Cancels the current operation
-- `handlePermissionChange`: Toggles individual permission checkboxes
-- `getPermissionCount`: Counts the number of active permissions
-- `formatDate`: Formats timestamps for display
-
-## Data Structure
-
-### User Object
-```javascript
-{
-  id: string,              // Unique user identifier (e.g., 'USR1001')
-  username: string,        // User's username
-  email: string,           // User's email address
-  phone: string,           // User's phone number
-  status: 'active' | 'suspended'  // Account status
-}
+-- Permissions table (planned)
+CREATE TABLE employee_permissions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+  permission_key VARCHAR(100) NOT NULL,
+  has_permission BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(employee_id, permission_key)
+);
 ```
 
-### Sub-Admin Object
-```javascript
-{
-  userId: string,         // Reference to user ID
-  username: string,        // Username for display
-  email: string,          // Email for reference
-  accessLevel: 'limited' | 'full' | 'custom',  // Access level
-  status: 'active' | 'suspended'  // Sub-admin status
-}
-```
+## Integration Points
 
-## UI Components
-- **Search Bar**: For finding users by various criteria
-- **Results Table**: Displays matching users with action buttons
-- **Access Level Form**: For assigning access levels to new sub-admins
-- **Status Alerts**: Show success/error messages
-- **Loading States**: For better user feedback during operations
+### Backend API Endpoints (To Be Implemented)
+- `GET /api/sub-admins` - List all sub-admins
+- `POST /api/sub-admins` - Create new sub-admin
+- `PUT /api/sub-admins/:id` - Update sub-admin permissions
+- `DELETE /api/sub-admins/:id` - Remove sub-admin access
+
+### Frontend Integration
+- Uses Axios for API calls (to be implemented)
+- Error handling and user feedback
+- Loading states during API operations
+
+## Security Considerations
+- Role-based access control for all operations
+- Input validation on both client and server
+- Audit logging for all administrative actions
+- Rate limiting for API endpoints
 
 ## Future Enhancements
-- Implement role-based access control (RBAC)
-- Add bulk operations for multiple users
-- Include sub-admin activity logs
-- Add email notifications for access grants/updates/revocations
-- Implement two-factor authentication for sensitive actions
-- Add IP whitelisting for sub-admin access
-- Include permission inheritance and role hierarchies
-- Add export functionality for audit purposes
+1. **Real-time Updates**
+   - WebSocket integration for live updates
+   - Notification system for permission changes
 
-## Dependencies
-- CoreUI React components
-- React Router for navigation
-- CoreUI Icons
+2. **Advanced Search**
+   - Filter sub-admins by role/permission
+   - Search by name, email, or permission
 
-## Navigation
-- Accessible via the sidebar menu under "Sub-Admins"
-- Direct link: `/sub-admins`
+3. **Bulk Operations**
+   - Bulk import/export of sub-admins
+   - Batch permission updates
 
-## Error Handling
-- Form validation for required fields
-- Error messages for failed operations
-- Loading states during API calls
+4. **Audit Logs**
+   - Track all permission changes
+   - Exportable activity reports

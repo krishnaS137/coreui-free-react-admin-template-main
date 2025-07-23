@@ -19,8 +19,10 @@ import {
   cilSettings,
   cilTask,
   cilUser,
+  cilAccountLogout,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
+import { handleLogout } from '../../utils/authUtils'
 
 import avatar8 from './../../assets/images/avatars/8.jpg'
 
@@ -60,12 +62,12 @@ const AppHeaderDropdown = () => {
             42
           </CBadge>
         </CDropdownItem>
-        <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
-        <CDropdownItem href="#">
+        <CDropdownHeader className="bg-body-secondary fw-semibold mt-2">Settings</CDropdownHeader>
+        <CDropdownItem href="#/profile">
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
-        <CDropdownItem href="#">
+        <CDropdownItem href="#/settings">
           <CIcon icon={cilSettings} className="me-2" />
           Settings
         </CDropdownItem>
@@ -84,6 +86,16 @@ const AppHeaderDropdown = () => {
           </CBadge>
         </CDropdownItem>
         <CDropdownDivider />
+        <CDropdownItem 
+          onClick={(e) => {
+            e.preventDefault();
+            handleLogout();
+          }}
+          className="text-danger"
+        >
+          <CIcon icon={cilAccountLogout} className="me-2" />
+          Logout
+        </CDropdownItem>
         <CDropdownItem href="#">
           <CIcon icon={cilLockLocked} className="me-2" />
           Lock Account

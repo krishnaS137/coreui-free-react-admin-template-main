@@ -91,15 +91,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved status change workflow with required reason/message
 - Updated database schema to include action tracking
 - Improved error handling and user feedback
-
-### Fixed
-- Fixed form validation in User Actions page
-- Improved error handling for status updates
-- Fixed UI issues in action history table
-- Added "Actions" button to User Profile page
-- Documentation for User Actions feature
-
-### Changed
+- **BREAKING**: Completely redesigned authentication system
+  - Removed Supabase Auth dependency
+  - Simplified to use direct database checks against `employees` table
+  - Removed password requirements and email confirmation
+  - Updated session management to use localStorage
+  - Removed registration page and related components
+  - Updated documentation to reflect new authentication flow
 - Refactored UserProfile component with custom hook for better code organization
 - Improved video player behavior with proper cleanup on modal close
 - Enhanced error handling and user feedback in video components
@@ -107,11 +105,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved mobile responsiveness and touch controls
 - Updated routing to include new User Actions page
 
+### Removed
+- Supabase Auth integration
+- Password requirements and hashing
+- Email confirmation flow
+- Registration functionality
+- Unused authentication-related components
+
 ### Fixed
+- Fixed form validation in User Actions page
+- Improved error handling for status updates
+- Fixed UI issues in action history table
+- Added "Actions" button to User Profile page
+- Documentation for User Actions feature
 - Resolved React Hooks order violation in UserProfile component
 - Fixed video playback cleanup when closing modal
 - Addressed potential memory leaks in video components
 - Fixed duplicate function declarations in UserProfile.js
+- Fixed RLS policy issues preventing admin registration
+- Resolved duplicate function declarations in auth service
+- Improved error messages for authentication failures
 
 ## [1.3.0] - 2025-06-29
 ### Added
