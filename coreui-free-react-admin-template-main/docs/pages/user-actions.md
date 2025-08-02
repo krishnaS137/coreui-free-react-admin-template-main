@@ -41,6 +41,29 @@ FOR EACH STATEMENT
 EXECUTE FUNCTION check_expired_suspensions();
 ```
 
+### User Actions Table
+```sql
+CREATE TABLE public.user_actions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  admin_id uuid NOT NULL,
+  action_type text NOT NULL,
+  action_details jsonb NULL,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  
+  -- Constraints
+  CONSTRAINT user_actions_pkey PRIMARY KEY (id),
+  CONSTRAINT user_actions_user_id_fkey FOREIGN KEY (user_id) 
+    REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT user_actions_admin_id_fkey FOREIGN KEY (admin_id) 
+    REFERENCES public.users(id) ON DELETE SET NULL
+);
+
+-- Index for faster lookups
+CREATE INDEX idx_user_actions_user_id ON public.user_actions(user_id);
+CREATE INDEX idx_user_actions_created_at ON public.user_actions(created_at);
+```
+
 ## Status Types
 
 1. **Normal**
