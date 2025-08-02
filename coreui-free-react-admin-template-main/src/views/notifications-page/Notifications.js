@@ -17,36 +17,76 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilCloudUpload } from '@coreui/icons'
 
-const Notifications = () => {
+const Notifications = ({ embeddedMode = false, currentUserName = '' }) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [numberOfNotifications, setNumberOfNotifications] = useState(1);
+  const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+  const [notifications, setNotifications] = useState([{
+    id: 0,
     notificationType: '',
     user: '',
     title: '',
     content: '',
     image: null,
     scheduleDate: ''
-  })
+  }]);
   
-  const [dragActive, setDragActive] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
+  const formData = notifications[currentNotificationIndex] || {};
+  
+  const [dragActive, setDragActive] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
+    const { name, value } = e.target;
+    
+    // Special handling for number of notifications
+    if (name === 'numberOfNotifications') {
+      const num = parseInt(value) || 1;
+      setNumberOfNotifications(Math.max(1, num));
+      
+      // If increasing the number, add new notification objects
+      if (num > notifications.length) {
+        const newNotifications = [...notifications];
+        for (let i = notifications.length; i < num; i++) {
+          newNotifications.push({
+            id: i,
+            notificationType: 'schedule-multiple',
+            user: '',
+            title: '',
+            content: '',
+            image: null,
+            scheduleDate: ''
+          });
+        }
+        setNotifications(newNotifications);
+      } else if (num < notifications.length) {
+        // If decreasing, just update the state but keep the array as is
+        // This prevents data loss if user changes their mind
+        setNotifications(prev => prev.slice(0, num));
+      }
+      return;
+    }
+    
+    // Update the current notification's data
+    const updatedNotifications = [...notifications];
+    updatedNotifications[currentNotificationIndex] = {
+      ...updatedNotifications[currentNotificationIndex],
       [name]: value
-    }))
+    };
+    setNotifications(updatedNotifications);
   }
   
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
+      const updatedNotifications = [...notifications];
+      updatedNotifications[currentNotificationIndex] = {
+        ...updatedNotifications[currentNotificationIndex],
         image: file
-      }))
-      setPreviewUrl(URL.createObjectURL(file))
+      };
+      setNotifications(updatedNotifications);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   }
   
@@ -76,24 +116,140 @@ const Notifications = () => {
   }
   
   const removeImage = () => {
-    setFormData(prev => ({
-      ...prev,
+    const updatedNotifications = [...notifications];
+    updatedNotifications[currentNotificationIndex] = {
+      ...updatedNotifications[currentNotificationIndex],
       image: null
-    }))
-    setPreviewUrl('')
+    };
+    setNotifications(updatedNotifications);
+    setPreviewUrl('');
   }
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Validate all notifications
+    const hasErrors = notifications.some(notification => {
+      return !notification.title || !notification.content || 
+             (notification.notificationType.includes('schedule') && !notification.scheduleDate);
+    });
+    
+    if (hasErrors) {
+      alert('Please fill in all required fields for all notifications');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Here you would typically send the notifications to your backend
+    console.log('Submitting notifications:', notifications);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      alert('Notifications scheduled successfully!');
+      // Reset form after successful submission
+      setNumberOfNotifications(1);
+      setCurrentNotificationIndex(0);
+      setNotifications([{
+        id: 0,
+        notificationType: '',
+        user: '',
+        title: '',
+        content: '',
+        image: null,
+        scheduleDate: ''
+      }]);
+    }, 1500);
+  };
+  
+  // Handle navigation between notifications
+  const goToNotification = (index) => {
+    setCurrentNotificationIndex(index);
+    // Reset preview when changing notifications
+    setPreviewUrl('');
+  };
+  
+  // Update preview URL when notification changes
+  React.useEffect(() => {
+    if (formData.image && typeof formData.image !== 'string') {
+      setPreviewUrl(URL.createObjectURL(formData.image));
+    } else if (formData.image) {
+      setPreviewUrl(formData.image);
+    } else {
+      setPreviewUrl('');
+    }
+  }, [currentNotificationIndex, formData.image]);
 
   return (
     <CRow>
       <CCol xs={12}>
         <CCard className="mb-4">
-          <CCardHeader>
-            <h4>Create Notification</h4>
+          <CCardHeader className="d-flex justify-content-between align-items-center">
+            <h4 className="mb-0">
+              {embeddedMode ? 'Send Notification to User' : 'Create Notification'}
+              {notifications.length > 1 && (
+                <small className="ms-2 text-muted">
+                  (Notification {currentNotificationIndex + 1} of {notifications.length})
+                </small>
+              )}
+            </h4>
+            {notifications.length > 1 && (
+              <div className="d-flex gap-2">
+                <CButton 
+                  color="secondary" 
+                  size="sm" 
+                  disabled={currentNotificationIndex === 0}
+                  onClick={() => goToNotification(currentNotificationIndex - 1)}
+                >
+                  Previous
+                </CButton>
+                <CButton 
+                  color="primary" 
+                  size="sm"
+                  disabled={currentNotificationIndex === notifications.length - 1}
+                  onClick={() => goToNotification(currentNotificationIndex + 1)}
+                >
+                  Next
+                </CButton>
+              </div>
+            )}
           </CCardHeader>
           <CCardBody>
             <CForm>
               <div className="mb-4">
                 <CRow className="g-3">
+                  {formData.notificationType === 'schedule-multiple' && embeddedMode && (
+                    <CCol xs={12}>
+                      <CFormLabel htmlFor="numberOfNotifications">Number of Notifications to Schedule</CFormLabel>
+                      <CFormInput
+                        type="number"
+                        id="numberOfNotifications"
+                        name="numberOfNotifications"
+                        min="1"
+                        value={numberOfNotifications}
+                        onChange={handleInputChange}
+                        className="mb-3"
+                      />
+                      {notifications.length > 1 && (
+                        <div className="d-flex flex-wrap gap-1 mb-3">
+                          {notifications.map((_, index) => (
+                            <CButton 
+                              key={index}
+                              color={currentNotificationIndex === index ? 'primary' : 'secondary'}
+                              size="sm"
+                              className="rounded-pill"
+                              onClick={() => goToNotification(index)}
+                            >
+                              {index + 1}
+                            </CButton>
+                          ))}
+                        </div>
+                      )}
+                    </CCol>
+                  )}
+                  
                   <CCol md={6}>
                     <CFormLabel htmlFor="notificationType">Type</CFormLabel>
                     <CFormSelect 
@@ -101,28 +257,39 @@ const Notifications = () => {
                       name="notificationType"
                       value={formData.notificationType}
                       onChange={handleInputChange}
+                      disabled={notifications.length > 1}
                     >
                       <option value="">Select Type</option>
                       <option value="instant">Instant</option>
                       <option value="schedule">Schedule</option>
-                      <option value="schedule-multiple">Schedule Multiple</option>
+                      {embeddedMode && <option value="schedule-multiple">Schedule Multiple</option>}
                     </CFormSelect>
                   </CCol>
-                  <CCol md={6}>
-                    <CFormLabel htmlFor="userSelect">Users</CFormLabel>
-                    <CFormSelect 
-                      id="userSelect" 
-                      name="user"
-                      value={formData.user}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select Users</option>
-                      <option value="all">All</option>
-                      <option value="single">Single</option>
-                      <option value="competition">Competition</option>
-                      <option value="selected">Selected Users</option>
-                    </CFormSelect>
-                  </CCol>
+                  {embeddedMode ? (
+                    <CCol md={6}>
+                      <CFormLabel>User</CFormLabel>
+                      <div className="form-control">
+                        <strong>{currentUserName || 'Current User'}</strong>
+                      </div>
+                      <input type="hidden" name="user" value="current" />
+                    </CCol>
+                  ) : (
+                    <CCol md={6}>
+                      <CFormLabel htmlFor="userSelect">Users</CFormLabel>
+                      <CFormSelect 
+                        id="userSelect" 
+                        name="user"
+                        value={formData.user}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select Users</option>
+                        <option value="all">All</option>
+                        <option value="single">Single</option>
+                        <option value="competition">Competition</option>
+                        <option value="selected">Selected Users</option>
+                      </CFormSelect>
+                    </CCol>
+                  )}
                   
                   <CCol xs={12}>
                     <CFormLabel htmlFor="title">Notification Title</CFormLabel>
@@ -238,8 +405,18 @@ const Notifications = () => {
                 <CButton 
                   color="primary" 
                   type="submit"
+                  disabled={isSubmitting}
                 >
-                  Send Notification
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      {formData.notificationType.includes('schedule') ? 'Scheduling...' : 'Sending...'}
+                    </>
+                  ) : (
+                    formData.notificationType.includes('schedule') 
+                      ? `Schedule ${notifications.length > 1 ? `All ${notifications.length} Notifications` : 'Notification'}`
+                      : `Send ${notifications.length > 1 ? `All ${notifications.length} Notifications` : 'Notification'}`
+                  )}
                 </CButton>
               </div>
             </CForm>

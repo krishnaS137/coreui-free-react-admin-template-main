@@ -31,9 +31,11 @@ import {
   cilCheckCircle, 
   cilBan,
   cilClock,
-  cilHistory
+  cilHistory,
+  cilBell
 } from '@coreui/icons'
 import { supabase } from '../../api/supabaseClient'
+import Notifications from '../notifications-page/Notifications'
 
 const STATUS_OPTIONS = [
   { value: 'normal', label: 'Normal (No restrictions)' },
@@ -45,6 +47,7 @@ const STATUS_OPTIONS = [
 const UserActions = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('status') // 'status' or 'notifications'
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
@@ -326,129 +329,184 @@ const UserActions = () => {
     )
   }
 
+  // Render tab content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'notifications':
+        // Get the user's name, falling back to username if name is not available
+        const userName = user?.name || 
+                        (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') || 
+                        user?.username || 
+                        'User';
+        
+        return (
+          <div className="p-4">
+            <Notifications 
+              embeddedMode={true} 
+              currentUserName={userName}
+            />
+          </div>
+        )
+      case 'status':
+      default:
+        return (
+          <>
+            <div className="p-4">
+              {error && <CAlert color="danger">{error}</CAlert>}
+              {success && <CAlert color="success">{success}</CAlert>}
+
+              <div className="mb-4">
+                <h6>User Information</h6>
+                <p><strong>ID:</strong> {user.id}</p>
+                <p><strong>Username:</strong> {user.username || 'N/A'}</p>
+                <p><strong>Email:</strong> {user.email || 'N/A'}</p>
+                <p><strong>Current Status:</strong> {getStatusBadge(user.status)}</p>
+                {user.suspended_until && (
+                  <p className="text-muted">
+                    <small>
+                      Suspension ends: {new Date(user.suspended_until).toLocaleString()}
+                    </small>
+                  </p>
+                )}
+              </div>
+
+              <CForm onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="status">Change Status</CFormLabel>
+                  <CFormSelect
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="mb-3"
+                  >
+                    {STATUS_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
+
+                  {formData.status === 'suspended_7days' && (
+                    <div className="mb-3">
+                      <CFormLabel htmlFor="customDays">
+                        Suspension Duration (days)
+                      </CFormLabel>
+                      <CFormInput
+                        type="number"
+                        id="customDays"
+                        name="customDays"
+                        min="1"
+                        value={formData.customDays}
+                        onChange={handleChange}
+                        className={touched.customDays && !formData.customDays ? 'is-invalid' : ''}
+                      />
+                      <CFormFeedback>Please enter a valid number of days</CFormFeedback>
+                    </div>
+                  )}
+
+                  {formData.status !== 'normal' && (
+                    <div className="mb-3">
+                      <CFormLabel htmlFor="reason">
+                        Reason for {formData.status.replace('_', ' ')}
+                        <span className="text-danger">*</span>
+                      </CFormLabel>
+                      <CFormTextarea
+                        id="reason"
+                        name="reason"
+                        rows="3"
+                        value={formData.reason}
+                        onChange={handleChange}
+                        className={touched.reason && !formData.reason.trim() ? 'is-invalid' : ''}
+                        placeholder={`Enter the reason for ${formData.status.replace('_', ' ')}...`}
+                      />
+                      <CFormFeedback>Please provide a reason for this action</CFormFeedback>
+                    </div>
+                  )}
+                </div>
+
+                <div className="d-flex gap-2">
+                  <CButton 
+                    type="submit" 
+                    color="primary" 
+                    disabled={saving || !formValid}
+                  >
+                    {saving ? (
+                      <>
+                        <CSpinner component="span" size="sm" aria-hidden="true" className="me-2" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Status'
+                    )}
+                  </CButton>
+                  
+                  <CButton 
+                    type="button" 
+                    color="secondary" 
+                    shape="outline" 
+                    onClick={() => navigate(-1)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </CButton>
+                </div>
+              </CForm>
+            </div>
+          </>
+        )
+    }
+  }
+
   return (
     <CContainer fluid>
       <CCard className="mb-4">
         <CCardHeader>
           <div className="d-flex justify-content-between align-items-center">
-            <h5>User Status Management</h5>
+            <div className="d-flex align-items-center">
+              <h5 className="mb-0 me-4">User Actions</h5>
+              <div className="d-flex border-bottom border-secondary border-opacity-25">
+                <button 
+                  className={`btn btn-link text-decoration-none py-2 px-3 position-relative ${activeTab === 'status' ? 'text-white fw-semibold' : 'text-white-50'}`}
+                  onClick={() => setActiveTab('status')}
+                >
+                  <CIcon icon={cilWarning} className="me-2" />
+                  Status Management
+                  {activeTab === 'status' && (
+                    <div className="position-absolute bottom-0 start-0 w-100" style={{ height: '3px', background: 'rgba(255, 255, 255, 0.5)' }} />
+                  )}
+                </button>
+                <button 
+                  className={`btn btn-link text-decoration-none py-2 px-3 position-relative ${activeTab === 'notifications' ? 'text-white fw-semibold' : 'text-white-50'}`}
+                  onClick={() => setActiveTab('notifications')}
+                >
+                  <CIcon icon={cilBell} className="me-2" />
+                  User Notifications
+                  {activeTab === 'notifications' && (
+                    <div className="position-absolute bottom-0 start-0 w-100" style={{ height: '3px', background: 'rgba(255, 255, 255, 0.5)' }} />
+                  )}
+                </button>
+              </div>
+            </div>
             <CButton color="secondary" onClick={() => navigate(-1)}>
               <CIcon icon={cilArrowLeft} className="me-1" /> Back to Profile
             </CButton>
           </div>
         </CCardHeader>
-        <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-          {success && <CAlert color="success">{success}</CAlert>}
-
-          <div className="mb-4">
-            <h6>User Information</h6>
-            <p><strong>ID:</strong> {user.id}</p>
-            <p><strong>Username:</strong> {user.username || 'N/A'}</p>
-            <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-            <p><strong>Current Status:</strong> {getStatusBadge(user.status)}</p>
-            {user.suspended_until && (
-              <p className="text-muted">
-                <small>
-                  Suspension ends: {new Date(user.suspended_until).toLocaleString()}
-                </small>
-              </p>
-            )}
-          </div>
-
-          <CForm onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <CFormLabel htmlFor="status">Change Status</CFormLabel>
-              <CFormSelect
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="mb-3"
-              >
-                {STATUS_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </CFormSelect>
-
-              {formData.status === 'suspended_7days' && (
-                <div className="mb-3">
-                  <CFormLabel htmlFor="customDays">
-                    Suspension Duration (days)
-                  </CFormLabel>
-                  <CFormInput
-                    type="number"
-                    id="customDays"
-                    name="customDays"
-                    min="1"
-                    value={formData.customDays}
-                    onChange={handleChange}
-                    className={touched.customDays && !formData.customDays ? 'is-invalid' : ''}
-                  />
-                  <CFormFeedback>Please enter a valid number of days</CFormFeedback>
-                </div>
-              )}
-
-              {formData.status !== 'normal' && (
-                <div className="mb-3">
-                  <CFormLabel htmlFor="reason">
-                    Reason for {formData.status.replace('_', ' ')}
-                    <span className="text-danger">*</span>
-                  </CFormLabel>
-                  <CFormTextarea
-                    id="reason"
-                    name="reason"
-                    rows="3"
-                    value={formData.reason}
-                    onChange={handleChange}
-                    className={touched.reason && !formData.reason.trim() ? 'is-invalid' : ''}
-                    placeholder={`Enter the reason for ${formData.status.replace('_', ' ')}...`}
-                  />
-                  <CFormFeedback>Please provide a reason for this action</CFormFeedback>
-                </div>
-              )}
-            </div>
-
-            <div className="d-flex gap-2">
-              <CButton 
-                type="submit" 
-                color="primary" 
-                disabled={saving || !formValid}
-              >
-                {saving ? (
-                  <>
-                    <CSpinner component="span" size="sm" aria-hidden="true" className="me-2" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update Status'
-                )}
-              </CButton>
-              
-              <CButton 
-                type="button" 
-                color="secondary" 
-                shape="outline" 
-                onClick={() => navigate(-1)}
-                disabled={saving}
-              >
-                Cancel
-              </CButton>
-            </div>
-          </CForm>
+        <CCardBody className="p-0">
+          {renderTabContent()}
         </CCardBody>
       </CCard>
 
-      {/* Action History */}
-      <CCard className="mb-4">
-        <CCardHeader>
-          <h5 className="mb-0">
-            <CIcon icon={cilHistory} className="me-2" />
-            Action History
-          </h5>
-        </CCardHeader>
+      {/* Action History - Only show in Status Management tab */}
+      {activeTab === 'status' && (
+        <CCard className="mb-4">
+          <CCardHeader>
+            <h5 className="mb-0">
+              <CIcon icon={cilHistory} className="me-2" />
+              Action History
+            </h5>
+          </CCardHeader>
         <CCardBody>
           {historyLoading ? (
             <div className="text-center py-4">
@@ -513,6 +571,7 @@ const UserActions = () => {
           )}
         </CCardBody>
       </CCard>
+      )}
     </CContainer>
   )
 }

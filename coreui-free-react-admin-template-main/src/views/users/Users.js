@@ -132,7 +132,7 @@ const Users = () => {
           </CCardHeader>
           <CCardBody>
             <CRow className="mb-3 align-items-end">
-              <CCol md={4} className="mb-2">
+                  <CCol md={4} className="mb-2">
                 <CFormLabel>Search</CFormLabel>
                 <CFormInput
                   type="search"
@@ -302,7 +302,7 @@ const Users = () => {
                   )}
                 </>
               )}
-            </div>
+                </div>
           </CCardBody>
         </CCard>
       </CCol>
