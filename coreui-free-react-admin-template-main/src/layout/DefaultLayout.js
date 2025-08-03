@@ -1,7 +1,23 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
+import { isAuthenticated } from '../services/authService'
 
 const DefaultLayout = () => {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check authentication status on component mount
+    if (!isAuthenticated()) {
+      navigate('/login')
+    }
+  }, [navigate])
+
+  // Don't render layout if not authenticated
+  if (!isAuthenticated()) {
+    return null
+  }
+
   return (
     <div>
       <AppSidebar />
