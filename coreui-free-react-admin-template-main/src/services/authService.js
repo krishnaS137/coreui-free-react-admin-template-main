@@ -32,7 +32,7 @@ export const loginAdmin = async (email, password) => {
 // Logout function
 export const handleLogout = () => {
   localStorage.removeItem('admin')
-  window.location.href = '/login'
+  window.location.hash = '#/login'
 }
 
 // Check if user is authenticated

@@ -22,7 +22,7 @@ import {
   cilAccountLogout,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { handleLogout } from '../../utils/authUtils'
+import { handleLogout } from '../../services/authService'
 
 import avatar8 from './../../assets/images/avatars/8.jpg'
 

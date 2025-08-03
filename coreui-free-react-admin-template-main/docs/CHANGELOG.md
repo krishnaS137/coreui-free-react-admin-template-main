@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Fixed - Authentication System Overhaul (Latest Update)
+- **CRITICAL**: Fixed severe JSX corruption in Login.js that was causing build failures
+  - Removed duplicate `<CForm>` elements that were nested incorrectly
+  - Fixed duplicate input fields in the same InputGroup
+  - Resolved unclosed `<CButton>` tags causing cascading JSX errors
+  - Added missing imports for `CAlert` and `CSpinner` components
+- **Authentication Flow**: Implemented proper authentication guards and navigation
+  - Added comprehensive route protection in DefaultLayout component
+  - Fixed navigation to use React Router instead of window.location methods
+  - Implemented automatic redirects for unauthenticated users to login page
+  - Added login page guard to redirect already authenticated users to dashboard
+- **HashRouter Compatibility**: Fixed all navigation issues with HashRouter
+  - Corrected logout redirect to use `window.location.hash = '#/login'`
+  - Fixed login success navigation to use `navigate('/dashboard')`
+  - Ensured proper URL structure: `http://localhost:3001/#/route-path`
+- **Import Path Corrections**: Fixed missing file imports causing build errors
+  - Corrected `import { handleLogout } from '../../utils/authUtils'` to `'../../services/authService'`
+  - Removed non-existent `utils/authUtils` dependency
+- **Registration System Removal**: Completely eradicated registration functionality
+  - Deleted `src/views/pages/register/Register.js` file
+  - Removed registration links and buttons from Login.js
+  - Updated login page UI to show "Welcome" message instead of registration prompt
+  - Removed unused `Link` import from react-router-dom in Login.js
+
+### Technical Improvements
+- **Build System**: Application now builds successfully without any JSX syntax errors
+- **Authentication**: Proper session management with localStorage persistence
+- **Routing**: Clean separation between public (login) and protected (admin) routes
+- **Code Quality**: Fixed all linting issues and import resolution problems
+- **User Experience**: Seamless login/logout flow with proper error handling and loading states
+
 ### Changed
 - Redesigned Withdraw Requests with an improved workflow:
   - Added new status options: Pending, Approved, Processing, Completed, Rejected, Cancelled
